@@ -48,16 +48,16 @@ class DotaxCrawling():
     # 크롤링 첫 번째
     def InputKeyword(self, input):
         self.keyword = input
+        self.GetSearchCount(input)
         return self.SearchAbsoluteUrl()
 
     def SearchAbsoluteUrl(self):
-        print("====Dotax Start====")
+        print("=====Dotax Start=====")
         print("SearchAbsoluteUrl 함수 진입")
         self.GetMaxPageNum()
         for i in range(1, self.maxPageNum + 1):  # 1부터 maxPageNum까지
             self.pageNum = i
-            self.searchUrl = "http://cafe984.daum.net/_c21_/cafesearch?grpid=mEr9&fldid=&pagenum=" + str(
-                self.pageNum) + "&listnum=20&item=subject&head=&query="+ self.keyword + "&attachfile_yn=&media_info=&viewtype=all&searchPeriod=" + self.now + "-" + self.now + "&sorttype=0&nickname="
+            self.searchUrl = "http://cafe984.daum.net/_c21_/cafesearch?grpid=mEr9&fldid=&pagenum=" + str(i) + "&listnum=20&item=subject&head=&query="+ self.keyword + "&attachfile_yn=&media_info=&viewtype=all&searchPeriod=" + self.now + "-" + self.now + "&sorttype=0&nickname="
             response = self.session.get(self.searchUrl)
             urls = self.Scrape_List_Page(response)
             for url in urls:
@@ -94,8 +94,8 @@ class DotaxCrawling():
             time.sleep(self.delay)
             root = lxml.html.fromstring(response.content)
             root.make_links_absolute(response.url)
-        for txt_point in root.cssselect('tbody > tr > td > div.search_result_box > em'):
-            self.month_searchCount.append(int(txt_point.text))
+            for txt_point in root.cssselect('tbody > tr > td > div.search_result_box > em'):
+                self.month_searchCount.append(int(txt_point.text))
 
     def GetOutlier(self, keyword):
         self.GetPeriodCount(keyword)
