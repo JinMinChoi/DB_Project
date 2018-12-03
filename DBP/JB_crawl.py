@@ -9,12 +9,14 @@ import numpy as np  # numpy : 아웃라이어 라이브러리
 """
 참고 사이트 : https://blog.naver.com/PostView.nhn?blogId=popqser2&logNo=221229125022&parentCategoryNo=&categoryNo=23&viewDate=&isShowPopularPosts=true&from=search 
 """
+
+
 # webdriver를 사용하기 위한 settings
 
 # chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--disable-infobars")
 
-class JBCrawling():
+class JbCrawling():
     keyword = ""
     mode = 1  # 1일 때에는 boxplot 구하는(목적 : 일일 게시물 개수) mode, 2일 때에는 검색된 게시물 개수(목적 : 최대 페이지 개수) 구하는 mode
     maxPageNum = 1
@@ -26,8 +28,7 @@ class JBCrawling():
     month_list = []
     month_searchCount = []
     now = datetime.date.today().strftime("%Y.%m.%d")
-    searchUrl =  "http://cafe984.daum.net/_c21_/cafesearch?grpid=mEr9&fldid=&pagenum=" + str(
-                pageNum) + "&listnum=20&item=subject&head=&query="+ keyword + "&attachfile_yn=&media_info=&viewtype=all&searchPeriod=" + now + "-" + now + "&sorttype=0&nickname="
+    searchUrl =  "http://cafe984.daum.net/_c21_/cafesearch?grpid=aVeZ&fldid=&pagenum=" + str(pageNum) + "&listnum=20&item=subject&head=&query="+ keyword + "&attachfile_yn=&media_info=&viewtype=all&searchPeriod=" + now + "-" + now + "&sorttype=0&nickname="
 
     def __init__(self):
         # 변하지 않는 변수들은 init에 선언
@@ -47,16 +48,16 @@ class JBCrawling():
     # 크롤링 첫 번째
     def InputKeyword(self, input):
         self.keyword = input
+        self.GetSearchCount(input)
         return self.SearchAbsoluteUrl()
 
     def SearchAbsoluteUrl(self):
-        print("====Jb start====")
+        print("=====JB Start=====")
         print("SearchAbsoluteUrl 함수 진입")
         self.GetMaxPageNum()
         for i in range(1, self.maxPageNum + 1):  # 1부터 maxPageNum까지
             self.pageNum = i
-            self.searchUrl = "http://cafe984.daum.net/_c21_/cafesearch?grpid=aVeZ&fldid=&pagenum=" + str(
-                self.pageNum) + "&listnum=20&item=subject&head=&query="+ self.keyword + "&attachfile_yn=&media_info=&viewtype=all&searchPeriod=" + self.now + "-" + self.now + "&sorttype=0&nickname="
+            self.searchUrl = "http://cafe984.daum.net/_c21_/cafesearch?grpid=aVeZ&fldid=&pagenum=" + str(i) + "&listnum=20&item=subject&head=&query="+ self.keyword + "&attachfile_yn=&media_info=&viewtype=all&searchPeriod=" + self.now + "-" + self.now + "&sorttype=0&nickname="
             response = self.session.get(self.searchUrl)
             urls = self.Scrape_List_Page(response)
             for url in urls:
@@ -93,8 +94,8 @@ class JBCrawling():
             time.sleep(self.delay)
             root = lxml.html.fromstring(response.content)
             root.make_links_absolute(response.url)
-        for txt_point in root.cssselect('tbody > tr > td > div.search_result_box > em'):
-            self.month_searchCount.append(int(txt_point.text))
+            for txt_point in root.cssselect('tbody > tr > td > div.search_result_box > em'):
+                self.month_searchCount.append(int(txt_point.text))
 
     def GetOutlier(self, keyword):
         self.GetPeriodCount(keyword)
@@ -151,4 +152,4 @@ class JBCrawling():
         self.driver.quit()
 
 if __name__ == '__main__':
-    JBCrawling().InputKeyword()
+    print(DotaxCrawling().GetSearchCount())
