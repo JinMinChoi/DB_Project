@@ -1,7 +1,7 @@
-import first_tweet_new
-import second_DOTAX
-import third_JB
-
+import datetime
+import DOTAX_crawl
+import JB_crawl
+import csv
 import datetime as dt
 import urllib.parse
 from bs4 import BeautifulSoup
@@ -14,14 +14,13 @@ django.setup()
 from App.models import Data
 
 class DB():
-    tweet_content = ""
     dotax_content = ""
     jb_content = ""
     flag = 1
+    now = datetime.date.today().strftime("%Y.%m.%d")
 
-    Tweet = first_tweet_new.TwitterCrawling()
-    Dotax = second_DOTAX.DotaxCrawling()
-    Jb = third_JB.JBCrawling()
+    Dotax = DOTAX_crawl.DotaxCrawling()
+    Jb = JB_crawl.JBCrawling()
 
     text_all = ""
     text_community = ""
@@ -29,11 +28,6 @@ class DB():
 
     keyword = ""
     outlier = 0
-
-    def tw(self, text_tw):
-        for text in text_tw.items():
-            tweet_Data = Data(text=text, community="트위터", time=dt.datetime.today().strftime("%Y.%m.%d"))
-            tweet_Data.save()
 
     def dt(self, text_dt):
         for text in text_dt:
@@ -65,10 +59,17 @@ class DB():
             print("outlier({0})보다 적은 게시물이 등록되어 있습니다.".format(self.outlier))
             print("아웃라이어보다 작아서 종료")
 
+    def CreateGraph(self):#dt.date.today().strftime("%Y.%m.%d")
+        with open('그래프'+str(dt.date.today().strftime("%Y.%m.%d")) +'.csv', 'w', encoding='UTF-8', newline="") as out_file:
+            writer = csv.writer(out_file)
+            writer.writerow(('date', 'JB', 'DT'))
+            for date, Jb, Dt in zip(self.Jb.month_list, self.Jb.month_searchCount, self.Dotax.month_searchCount):
+                writer.writerow((date, Jb, Dt))
+            writer.writerow((self.now, self.Jb.searchCount, self.Dotax.searchCount))
+
     def DB_save(self):
         print("outlier({0})보다 많은 게시물이 등록되어 있습니다.".format(self.outlier))
-        text_data_tweet = self.Tweet.InputKeyword(self.keyword)
-        self.tw(text_data_tweet)
+        self.CreateGraph()
 
         self.Dotax.InputKeyword(self.keyword)
         self.dt(self.Dotax.text)
@@ -78,31 +79,22 @@ class DB():
 
         cnt = 1
         for all_text in Data.objects.all():
-            if all_text.community == "트위터" :
-                self.tweet_content += str(cnt) + "\t" + all_text.text + "\t" + all_text.community + "\n"
-                filename = str(all_text.community) + str(all_text.time)
-                file1 = open(filename, 'w', encoding='utf-8')
-                file1.write(self.tweet_content)
-
             if all_text.community == "도탁스":
+                self.dotax_content += str(cnt) + "\t" +  all_text.text + "\t" + all_text.community + "\n"
+                filename = str(all_text.community) + str(all_text.time) + ".txt"
+                file1 = open(filename, 'w', encoding='utf-8')
+                file1.write(self.dotax_content)
+
+            elif all_text.community == "쭉빵":
                 if self.flag == 1:
                     file1.close()
                     self.flag = 2
-                self.dotax_content += str(cnt) + "\t" +  all_text.text + "\t" + all_text.community + "\n"
-                filename = str(all_text.community) + str(all_text.time)
-                file2 = open(filename, 'w', encoding='utf-8')
-                file2.write(self.dotax_content)
-
-            elif all_text.community == "쭉빵":
-                if self.flag == 2:
-                    file2.close()
-                    self.flag = 3
                 self.jb_content += str(cnt) + "\t" +  all_text.text + "\t" + all_text.community + "\n"
-                filename = str(all_text.community) + str(all_text.time)
-                file3 = open(filename, 'w', encoding='utf-8')
-                file3.write(self.jb_content)
+                filename = str(all_text.community) + str(all_text.time) + ".txt"
+                file2 = open(filename, 'w', encoding='utf-8')
+                file2.write(self.jb_content)
             cnt += 1
-        file3.close()
+        file2.close()
 
 if __name__ == '__main__':
     DB().Input_Keyword()
